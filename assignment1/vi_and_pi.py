@@ -10,11 +10,13 @@ np.set_printoptions(precision=3)
 
 def compute_value(P,V,state,action, gamma):
 	res = 0
-
+	
+	#immediate reward  R(s,a)
 	res += P[state][action][0][2]
 
+	#discounted sum of future value:  sum of p(s'|s,a) * V(s')
 	for i in range(len(P[state][action])):
-		res += gamma * P[state][action][i][0] * V[P[state][action][i][1]]      #p(s'|s,a) * V(s')
+		res += gamma * P[state][action][i][0] * V[P[state][action][i][1]]      
 
 	return res
 
@@ -52,17 +54,22 @@ def value_iteration(P, nS, nA, gamma=0.9, max_iteration=20, tol=1e-3):
 
 
 	for k in range(max_iteration):
-	    old_V = V.copy()
+	    Value_Old = V.copy()
 
 	    for i in range(nS):
 		Value_CurState_Opt = -10
 		for j in range(nA):
-		    reward = compute_value(P,old_V, i, j, gamma)
-		    if reward > Value_CurState_Opt:
-		        Value_CurState_Opt = reward
+		    Value_CurState_New = compute_value(P, Value_Old, i, j, gamma)
+		    if Value_CurState_New > Value_CurState_Opt:
+		        Value_CurState_Opt = Value_CurState_New
 		        policy[i] = j
 
          	V[i] = Value_CurState_Opt
+
+	    #check tolerance
+            var = np.linalg.norm(Value_Old - V)
+            if var<tol:
+		break
 
 	return V, policy
 
