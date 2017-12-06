@@ -8,6 +8,16 @@ from lake_envs import *
 
 np.set_printoptions(precision=3)
 
+def compute_value(P,V,state,action, gamma):
+	res = 0
+
+	res += P[state][action][0][2]
+
+	for i in range(len(P[state][action])):
+		res += gamma * P[state][action][i][0] * V[P[state][action][i][1]]      #p(s'|s,a) * V(s')
+
+	return res
+
 
 def value_iteration(P, nS, nA, gamma=0.9, max_iteration=20, tol=1e-3):
 	"""
@@ -39,6 +49,21 @@ def value_iteration(P, nS, nA, gamma=0.9, max_iteration=20, tol=1e-3):
 	############################
 	# YOUR IMPLEMENTATION HERE #
 	############################
+
+
+	for k in range(max_iteration):
+	    old_V = V.copy()
+
+	    for i in range(nS):
+		Value_CurState_Opt = -10
+		for j in range(nA):
+		    reward = compute_value(P,old_V, i, j, gamma)
+		    if reward > Value_CurState_Opt:
+		        Value_CurState_Opt = reward
+		        policy[i] = j
+
+         	V[i] = Value_CurState_Opt
+
 	return V, policy
 
 
@@ -196,5 +221,9 @@ if __name__ == "__main__":
 	print "Here is an example of state, action, reward, and next state"
 	example(env)
 	V_vi, p_vi = value_iteration(env.P, env.nS, env.nA, gamma=0.9, max_iteration=20, tol=1e-3)
+
+	print '\n Value Iteration'
+	print '\nValue\n',V_vi,'\nPolicy\n',p_vi
+
 	V_pi, p_pi = policy_iteration(env.P, env.nS, env.nA, gamma=0.9, max_iteration=20, tol=1e-3)
 	
