@@ -9,16 +9,19 @@ from lake_envs import *
 np.set_printoptions(precision=3)
 
 def compute_value(P,V,state,action, gamma):
-	res = 0
-	
+	value_EM = 0
+
 	#immediate reward  R(s,a)
-	res += P[state][action][0][2]
+	value_EM += P[state][action][0][2]
 
 	#discounted sum of future value:  sum of p(s'|s,a) * V(s')
-	for i in range(len(P[state][action])):
-		res += gamma * P[state][action][i][0] * V[P[state][action][i][1]]      
+	possible_results = P[state][action]
+	for i in range(len(possible_results)):
 
-	return res
+	    (probability, nextstate, reward, terminal) = possible_results[i]
+	    value_EM += gamma * probability * V[nextstate]      
+
+	return value_EM
 
 
 def value_iteration(P, nS, nA, gamma=0.9, max_iteration=20, tol=1e-3):
@@ -71,40 +74,51 @@ def value_iteration(P, nS, nA, gamma=0.9, max_iteration=20, tol=1e-3):
             if var<tol:
 		break
 
+
 	return V, policy
 
+def policy_evaluation(P, nS, nA, policy, gamma=0.9, max_iteration=100, tol=1e-3):
+    """Evaluate the value function from a given policy.
+    Parameters
+    ----------
+    P: dictionary
+        It is from gym.core.Environment
+        P[state][action] is tuples with (probability, nextstate, reward, terminal)
+    nS: int
+        number of states
+    nA: int
+        number of actions
+    gamma: float
+        Discount factor. Number in range [0, 1)
+    policy: np.array
+        The policy to evaluate. Maps states to actions.
+    max_iteration: int
+        The maximum number of iterations to run before stopping. Feel free to change it.
+    tol: float
+        Determines when value function has converged.
+    Returns
+    -------
+    value function: np.ndarray
+    The value function from the given policy.
+    """
+    ############################
+    # YOUR IMPLEMENTATION HERE #
+    value_function = np.zeros(nS)
+    new_value_function = value_function.copy()
+    i = 0
+    while i<=max_iteration or np.sum(np.sqrt(np.square(new_value_function-value_function)))>tol:
+        i += 1
+        value_function = new_value_function.copy()
+        for state in range(nS):
+            result = P[state][policy[state]]
+            new_value_function[state] = np.array(result)[:,2].mean()
+            for num in range(len(result)):
+                (probability, nextstate, reward, terminal) = result[num]
+                new_value_function[state] += (gamma * probability * value_function[nextstate])
+    ############################
+    return new_value_function
 
-def policy_evaluation(P, nS, nA, policy, gamma=0.9, max_iteration=1000, tol=1e-3):
-	"""Evaluate the value function from a given policy.
-
-	Parameters
-	----------
-	P: dictionary
-		It is from gym.core.Environment
-		P[state][action] is tuples with (probability, nextstate, reward, terminal)
-	nS: int
-		number of states
-	nA: int
-		number of actions
-	gamma: float
-		Discount factor. Number in range [0, 1)
-	policy: np.array
-		The policy to evaluate. Maps states to actions.
-	max_iteration: int
-		The maximum number of iterations to run before stopping. Feel free to change it.
-	tol: float
-		Determines when value function has converged.
-	Returns
-	-------
-	value function: np.ndarray
-		The value function from the given policy.
-	"""
-	############################
-	# YOUR IMPLEMENTATION HERE #
-	############################
-	return np.zeros(nS)
-
-
+ 
 def policy_improvement(P, nS, nA, value_from_policy, policy, gamma=0.9):
 	"""Given the value function from policy improve the policy.
 
@@ -134,7 +148,17 @@ def policy_improvement(P, nS, nA, value_from_policy, policy, gamma=0.9):
 	############################
 	# YOUR IMPLEMENTATION HERE #
 	############################
-	return np.zeros(nS, dtype='int')
+        Q = np.zeros([nS,nA])
+        for state in range(nS):
+            for action in range(nA):
+                
+		Q[state][action] = compute_value(P,value_from_policy,state,action, gamma)
+	    
+        policy_New = np.argmax(Q, axis=1)
+	
+
+        return policy_New
+
 
 
 def policy_iteration(P, nS, nA, gamma=0.9, max_iteration=20, tol=1e-3):
@@ -164,10 +188,23 @@ def policy_iteration(P, nS, nA, gamma=0.9, max_iteration=20, tol=1e-3):
 	policy: np.ndarray
 	"""
 	V = np.zeros(nS)
-	policy = np.zeros(nS, dtype=int)
+	policy     = np.zeros(nS, dtype=int)
+        policy_New = policy.copy()
 	############################
 	# YOUR IMPLEMENTATION HERE #
 	############################
+
+	
+	k = 0
+	while k<=max_iteration or np.sum(np.sqrt(np.square(policy_New-policy)))>tol:
+  
+	    k +=1
+            policy = policy_New
+            V = policy_evaluation(P, nS, nA, policy)
+            policy_New = policy_improvement(P, nS, nA, V, policy)	
+	 
+
+
 	return V, policy
 
 
@@ -227,10 +264,14 @@ if __name__ == "__main__":
 	print env.__doc__
 	print "Here is an example of state, action, reward, and next state"
 	example(env)
+		
 	V_vi, p_vi = value_iteration(env.P, env.nS, env.nA, gamma=0.9, max_iteration=20, tol=1e-3)
 
 	print '\n Value Iteration'
 	print '\nValue\n',V_vi,'\nPolicy\n',p_vi
-
+	
 	V_pi, p_pi = policy_iteration(env.P, env.nS, env.nA, gamma=0.9, max_iteration=20, tol=1e-3)
+
+	print '\n Policy Iteration'
+	print '\nValue\n',V_pi,'\nPolicy\n',p_pi
 	
