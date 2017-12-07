@@ -104,20 +104,22 @@ def policy_evaluation(P, nS, nA, policy, gamma=0.9, max_iteration=100, tol=1e-3)
 	############################
 	# YOUR IMPLEMENTATION HERE #
 	############################
-	value_function = np.zeros(nS)
+	value_function = np.zeros(nS,dtype=float)
 	new_value_function = value_function.copy()
 	k = 0
 	while k<=max_iteration or np.sum(np.sqrt(np.square(new_value_function-value_function)))>tol:
 	    k += 1
 	    value_function = new_value_function.copy()
 	    for state in range(nS):
-	        result = P[state][policy[state]]
-	        new_value_function[state] = np.array(result)[:,2].mean()
-	        for num in range(len(result)):
-	            (probability, nextstate, reward, terminal) = result[num]
-	            new_value_function[state] += (gamma * probability * value_function[nextstate])
+		
+		action = policy[state]
+		new_value_function[state] = compute_value(P,value_function,state,action, gamma)
 
 	return new_value_function
+
+
+
+
 
  
 def policy_improvement(P, nS, nA, value_from_policy, policy, gamma=0.9):
