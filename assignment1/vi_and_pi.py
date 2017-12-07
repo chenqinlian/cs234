@@ -78,45 +78,46 @@ def value_iteration(P, nS, nA, gamma=0.9, max_iteration=20, tol=1e-3):
 	return V, policy
 
 def policy_evaluation(P, nS, nA, policy, gamma=0.9, max_iteration=100, tol=1e-3):
-    """Evaluate the value function from a given policy.
-    Parameters
-    ----------
-    P: dictionary
-        It is from gym.core.Environment
-        P[state][action] is tuples with (probability, nextstate, reward, terminal)
-    nS: int
-        number of states
-    nA: int
-        number of actions
-    gamma: float
-        Discount factor. Number in range [0, 1)
-    policy: np.array
-        The policy to evaluate. Maps states to actions.
-    max_iteration: int
-        The maximum number of iterations to run before stopping. Feel free to change it.
-    tol: float
-        Determines when value function has converged.
-    Returns
-    -------
-    value function: np.ndarray
-    The value function from the given policy.
-    """
-    ############################
-    # YOUR IMPLEMENTATION HERE #
-    value_function = np.zeros(nS)
-    new_value_function = value_function.copy()
-    i = 0
-    while i<=max_iteration or np.sum(np.sqrt(np.square(new_value_function-value_function)))>tol:
-        i += 1
-        value_function = new_value_function.copy()
-        for state in range(nS):
-            result = P[state][policy[state]]
-            new_value_function[state] = np.array(result)[:,2].mean()
-            for num in range(len(result)):
-                (probability, nextstate, reward, terminal) = result[num]
-                new_value_function[state] += (gamma * probability * value_function[nextstate])
-    ############################
-    return new_value_function
+	"""Evaluate the value function from a given policy.
+	Parameters
+	----------
+	P: dictionary
+	    It is from gym.core.Environment
+            P[state][action] is tuples with (probability, nextstate, reward, terminal)
+	nS: int
+	    number of states
+	nA: int
+	    number of actions
+	gamma: float
+	    Discount factor. Number in range [0, 1)
+	policy: np.array
+	    The policy to evaluate. Maps states to actions.
+	max_iteration: int
+	    The maximum number of iterations to run before stopping. Feel free to change it.
+	tol: float
+	    Determines when value function has converged.
+	Returns
+	-------
+	value function: np.ndarray
+	The value function from the given policy.
+	"""
+	############################
+	# YOUR IMPLEMENTATION HERE #
+	############################
+	value_function = np.zeros(nS)
+	new_value_function = value_function.copy()
+	k = 0
+	while k<=max_iteration or np.sum(np.sqrt(np.square(new_value_function-value_function)))>tol:
+	    k += 1
+	    value_function = new_value_function.copy()
+	    for state in range(nS):
+	        result = P[state][policy[state]]
+	        new_value_function[state] = np.array(result)[:,2].mean()
+	        for num in range(len(result)):
+	            (probability, nextstate, reward, terminal) = result[num]
+	            new_value_function[state] += (gamma * probability * value_function[nextstate])
+
+	return new_value_function
 
  
 def policy_improvement(P, nS, nA, value_from_policy, policy, gamma=0.9):
