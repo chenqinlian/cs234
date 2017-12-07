@@ -207,7 +207,6 @@ def policy_iteration(P, nS, nA, gamma=0.9, max_iteration=20, tol=1e-3):
             policy_New = policy_improvement(P, nS, nA, V, policy)	
 	 
 
-
 	return V, policy
 
 
